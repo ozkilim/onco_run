@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Build artifacts
+build/
+dist/
+*.tar
+*.tar.gz
+
+# Model weights (large, distribute separately)
+models/*
+!models/.gitkeep
+
+# Slides (test data, large; never check in WSIs)
+slides/
+*.svs
+*.ndpi
+*.mrxs
+*.scn
+
+# Outputs
+outputs/
+output/
+output_*/
+*.csv
+*.h5
+
+# Editor / OS
+.DS_Store
+.vscode/
+.idea/
+
+# Docker
+.docker-cache/
+
+# Bake artifact: scripts/build_with_recipe.sh stages the chosen recipe
+# under this fixed name so the Dockerfile can COPY a deterministic
+# filename. It's regenerated on every bake.
+recipes/recipe.yaml

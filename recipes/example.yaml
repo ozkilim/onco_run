@@ -1,0 +1,41 @@
+# Example recipe. Copy this and edit `predictor.module` (or `predictor.path`)
+# and `predictor.config` to point at your model.
+#
+# Paths inside `predictor.config` are passed verbatim to your factory; if
+# you want them resolved relative to this file, use `recipe_dir` inside
+# the factory:
+#
+#     def build_predictor(*, weights, recipe_dir, **_):
+#         weights_path = (recipe_dir / weights).resolve()
+#         ...
+
+name: example_dummy
+description: |
+  Minimal example. Returns toy probabilities derived from the slide
+  thumbnail. Replace `predictor.module` with your own to plug in a real
+  model — the runner stays the same.
+
+classes: ["A", "B", "C"]
+
+predictor:
+  module: predictors.example_predictor
+  factory: build_predictor
+  config:
+    classes: ["A", "B", "C"]
+    thumbnail_max_dim: 1024
+
+output:
+  csv_name: predictions.csv
+
+# Slide formats to scan for (case-insensitive, no leading dot).
+slide_extensions:
+  - svs
+  - tif
+  - tiff
+  - ndpi
+  - mrxs
+  - scn
+  - bif
+  - vms
+  - vmu
+  - svslide

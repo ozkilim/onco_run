@@ -1,0 +1,37 @@
+# Convenience compose file. Two ways to configure paths:
+#
+#   1. Set SLIDES_DIR / OUTPUT_DIR / RECIPE_PATH / MODELS_DIR in a .env file
+#      (see .env.example), then `docker compose run --rm onco-run`.
+#   2. Override on the command line: `SLIDES_DIR=/path docker compose run --rm onco-run`.
+#
+# The `gpu` profile attaches all visible NVIDIA GPUs; CPU-only hosts can
+# omit `--profile gpu` and the same image still runs.
+services:
+  onco-run:
+    image: onco-run:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      ONCO_RECIPE: /app/recipes/recipe.yaml
+      ONCO_SLIDES_DIR: /data/slides
+      ONCO_OUTPUT_DIR: /data/output
+    volumes:
+      - ${SLIDES_DIR:-./slides}:/data/slides:ro
+      - ${OUTPUT_DIR:-./output}:/data/output
+      - ${RECIPE_PATH:-./recipes/recipe.yaml}:/app/recipes/recipe.yaml:ro
+      - ${MODELS_DIR:-./models}:/app/models:ro
+      - ${PREDICTORS_DIR:-./predictors}:/app/predictors:ro
+    profiles: ["cpu"]
+
+  onco-run-gpu:
+    extends:
+      service: onco-run
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: ["gpu"]
+    profiles: ["gpu"]

@@ -1,0 +1,15 @@
+**/__pycache__
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+.git
+.gitignore
+.venv
+venv
+build
+dist
+outputs
+*.tar
+*.tar.gz
+tests
+deliverables
