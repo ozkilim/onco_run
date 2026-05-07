@@ -192,9 +192,38 @@ onco-run predict --recipe /app/recipes/recipe.yaml \
 
 ---
 
-## Shipping to a collaborator
+## Onboarding a collaborator on the same server
 
-Once the image is baked:
+If your collaborators get accounts on the same box (no tarball shipping
+needed), bake the image once and run the onboarding script per user:
+
+```bash
+# One-time, as admin:
+make bake RECIPE=recipes/example.yaml TAG=onco-run:dummy_v1
+
+# Per collaborator:
+sudo ./scripts/onboard_collaborator.sh alice --image onco-run:dummy_v1 --create-user
+```
+
+This creates `/home/alice/onco_run/{slides,output}` with a self-contained
+`run.sh`, adds `alice` to the `docker` group, and prints a one-paragraph
+SSH instruction blob you can paste to her. Her workflow becomes:
+
+```bash
+ssh alice@host
+newgrp docker            # one-time, picks up the docker group
+cd ~/onco_run
+cp /path/to/wsis/*.svs slides/
+./run.sh
+# then send back ~/onco_run/output/predictions.csv
+```
+
+Output files are owned by the user (the wrapper passes `-u $(id -u):$(id -g)`
+so docker doesn't write root-owned files into their home).
+
+## Shipping to a remote collaborator
+
+If they're on a different machine, once the image is baked:
 
 ```bash
 make package TAG=onco-run:my_model_v1

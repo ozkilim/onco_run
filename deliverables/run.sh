@@ -80,7 +80,10 @@ ABS_SLIDES="$(cd "$SLIDES_DIR" && pwd)"
 ABS_OUTPUT="$(cd "$OUTPUT_DIR" && pwd)"
 
 echo ">> Running onco_run..."
+# Run as the calling user so output files are owned by you, not root.
 docker run --rm \
+    -u "$(id -u):$(id -g)" \
+    -e HOME=/tmp \
     "${GPU_ARGS[@]}" \
     -v "$ABS_SLIDES:/data/slides:ro" \
     -v "$ABS_OUTPUT:/data/output" \
