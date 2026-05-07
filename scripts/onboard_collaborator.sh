@@ -25,12 +25,14 @@ USER_NAME=""
 IMAGE_TAG="onco-run:dummy_v1"
 CREATE_USER=0
 LOAD_TARBALL=""
+SSH_KEY_FILE=""
 
 while [ $# -gt 0 ]; do
     case "$1" in
         --image)        IMAGE_TAG="$2"; shift 2 ;;
         --create-user)  CREATE_USER=1; shift ;;
         --load)         LOAD_TARBALL="$2"; shift 2 ;;
+        --ssh-key)      SSH_KEY_FILE="$2"; shift 2 ;;
         -h|--help)
             sed -n '2,18p' "$0"
             exit 0
@@ -44,7 +46,7 @@ while [ $# -gt 0 ]; do
 done
 
 if [ -z "$USER_NAME" ]; then
-    echo "usage: $0 USERNAME [--image TAG] [--create-user] [--load TARBALL]" >&2
+    echo "usage: $0 USERNAME [--image TAG] [--create-user] [--ssh-key FILE.pub] [--load TARBALL]" >&2
     exit 2
 fi
 
@@ -94,6 +96,32 @@ if ! getent group docker >/dev/null; then
 fi
 usermod -aG docker "$USER_NAME"
 echo ">> Added $USER_NAME to docker group"
+
+# 4b. Install the collaborator's SSH public key, if provided.
+#     Idempotent: only appends keys not already present.
+if [ -n "$SSH_KEY_FILE" ]; then
+    if [ ! -f "$SSH_KEY_FILE" ]; then
+        echo "ERROR: ssh public key file not found: $SSH_KEY_FILE" >&2
+        exit 1
+    fi
+    HOME_DIR_SSH=$(getent passwd "$USER_NAME" | cut -d: -f6)
+    SSH_DIR="$HOME_DIR_SSH/.ssh"
+    AUTH_KEYS="$SSH_DIR/authorized_keys"
+    install -d -m 700 -o "$USER_NAME" -g "$USER_NAME" "$SSH_DIR"
+    touch "$AUTH_KEYS"
+    chown "$USER_NAME:$USER_NAME" "$AUTH_KEYS"
+    chmod 600 "$AUTH_KEYS"
+    while IFS= read -r line; do
+        [ -z "$line" ] && continue
+        case "$line" in \#*) continue ;; esac
+        if ! grep -qxF "$line" "$AUTH_KEYS"; then
+            echo "$line" >> "$AUTH_KEYS"
+            echo ">> Added SSH key from $SSH_KEY_FILE to $AUTH_KEYS"
+        else
+            echo ">> SSH key already in $AUTH_KEYS (no-op)"
+        fi
+    done < "$SSH_KEY_FILE"
+fi
 
 # 5. Provision the kit folder.
 HOME_DIR=$(getent passwd "$USER_NAME" | cut -d: -f6)

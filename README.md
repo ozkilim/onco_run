@@ -201,9 +201,17 @@ needed), bake the image once and run the onboarding script per user:
 # One-time, as admin:
 make bake RECIPE=recipes/example.yaml TAG=onco-run:dummy_v1
 
-# Per collaborator:
-sudo ./scripts/onboard_collaborator.sh alice --image onco-run:dummy_v1 --create-user
+# Per collaborator (alice emails you her ~/.ssh/id_ed25519.pub first):
+sudo ./scripts/onboard_collaborator.sh alice \
+    --image onco-run:dummy_v1 \
+    --create-user \
+    --ssh-key /tmp/alice.pub
 ```
+
+The collaborator only sends you their **public** key — the matching
+private key never leaves their machine. If they don't already have a
+key, they generate one with `ssh-keygen -t ed25519` and email you
+`~/.ssh/id_ed25519.pub` (a single line of text, safe to share).
 
 This creates `/home/alice/onco_run/{slides,output}` with a self-contained
 `run.sh`, adds `alice` to the `docker` group, and prints a one-paragraph
